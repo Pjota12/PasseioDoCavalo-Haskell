@@ -47,7 +47,7 @@ validMoves boardSize path (x, y) =
 -- VISITA APENAS O PRIMEIRO CAMINHO ENCONTRADO
 
 --MAYBE
---O tipo maybe serve para representar um valor que pode ou não estar presente
+--O tipo maybe serve arpa representar um valor que pode ou não estar presente
 -- Just x -> representa que eu achei um valor x
 -- Nothing -> representa que eu não achei nenhum valor
 
