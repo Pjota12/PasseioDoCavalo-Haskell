@@ -37,6 +37,13 @@ validMoves boardSize path (x, y) =
         , isInside boardSize (a+dx, b+dy)
         , (a+dx, b+dy) `notElem` path
         ]
+
+isOpen :: Pos -> Pos -> (Int, Int) -> Bool
+isOpen (x1, y1) (x2, y2) boardSize =
+    -- Verifica se (x2, y2) é um movimento de cavalo válido a partir de (x1, y1) 
+    let nextMoves = [ (x1+dx, y1+dy) | (dx,dy) <- moves, isInside boardSize (x1+dx, y1+dy)]
+    in null [(a,b) | (a, b) <- nextMoves, a == x2, b == y2]
+
 --VISITA TODOS OS CAMINHOS POSSÍVEIS DO CAVALO --RUIM PRA KRL--
 -- horseTour :: (Int, Int) -> Path -> Pos -> [Path]
 -- horseTour boardSize path currentPos
@@ -52,9 +59,16 @@ validMoves boardSize path (x, y) =
 -- Nothing -> representa que eu não achei nenhum valor
 
 -- Não roda para tabuleiros grandes
-horseTour :: (Int, Int) -> Path -> Pos -> Maybe Path
+--horseTour :: (Int, Int) -> Path -> Pos -> Maybe Path
 horseTour boardSize path currentPos
-    | length path == n*m = Just (reverse path) -- Se o tamanho do caminho for igual ao número de casas, retornamos o caminho
+    | length path == n*m = 
+        let finalPath = reverse path 
+            firstPos = head finalPath
+            lastPos = currentPos
+        in
+        if isOpen lastPos firstPos boardSize
+            then Just finalPath
+            else Nothing
     | otherwise = tryMoves (validMoves boardSize path currentPos) 
     where 
         (n, m) = boardSize
