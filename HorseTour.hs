@@ -51,7 +51,6 @@ isOpen (x1, y1) (x2, y2) boardSize =
     in notElem(x2,y2) nextMoves
 
 
--- Não roda para tabuleiros grandes
 horseTour :: (Int, Int) -> Path -> Pos -> Maybe Path
 horseTour boardSize path currentPos
     | length path == n*m = 
@@ -67,6 +66,6 @@ horseTour boardSize path currentPos
         tryMoves [] = Nothing -- Se não houver mais movimentos válidos, retornamos Nothing
         tryMoves (nextPos:rest) =
             case horseTour boardSize (nextPos : path) nextPos of
-                Just p -> Just p -- Se encontramos um caminho válido, retornamos ele
+                Just finalPath -> Just finalPath-- Se encontramos um caminho válido, retornamos ele
                 Nothing -> tryMoves rest -- Caso contrário, tentamos o próximo moviimento
 
