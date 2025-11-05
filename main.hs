@@ -32,7 +32,7 @@ resolverCaso [n, m, x, y]
                 print startPos
                 putStrLn "Caminho:"
                 print path
-            Nothing -> putStr "\nNenhum caminho encontrado para tabuleiro " >> print boardSize >> putStrLn ".\n"
+            Nothing -> putStr "\nNenhum caminho encontrado para tabuleiro " >> print boardSize >> putStrLn "\n"
 resolverCaso _ = putStrLn "Caso inválido."
 
 

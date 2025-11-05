@@ -1,74 +1,66 @@
 module HorseTour where
 
-import Data.List (sortOn)
 -- Posições e caminhos
 type Pos = (Int, Int)
 type Path = [Pos]
 
 -- Movimentos possíveis do cavalo no xadrez
-moves :: [Pos]
-moves = [(2,1), (1,2), (-1,2), (-2,1), (-2,-1), (-1,-2), (1,-2), (2,-1)]
-
+moves :: (Int, Int) -> [Pos]
+moves (n,m) 
+    | n <= m = [(2,1), (-2,1), (-2,-1), (2,-1),(1,2), (-1,2),(-1,-2), (1,-2)]
+    | n > m = [(1,2),(1,-2), (-1,-2),(-1,2), (2,1), (2,-1),(-2,-1), (-2,1)]
+        
 isInside :: (Int, Int) -> Pos -> Bool
 isInside (n, m) (x, y) = x >= 0 && x < n && y >= 0 && y < m
 
--- RETORNA OS MOVIMENTOS VÁLIDOS DO CAVALO
--- validMoves :: (Int, Int) -> Path -> Pos -> [Pos]
--- validMoves boardSize path (x, y) =
---     [ (x + dx , y + dy) | (dx,dy) <- moves,isInside boardSize (x + dx, y + dy), (x + dx, y + dy) `notElem` path ]
 
+-- Quicksort customizado
+quicksortBy :: (a -> a -> Bool) -> [a] -> [a]
+quicksortBy _ [] = []
+quicksortBy cmp (x:xs) =
+    let smallerSorted = quicksortBy cmp [a | a <- xs, cmp a x]   -- "menores"
+        biggerSorted  = quicksortBy cmp [a | a <- xs, not (cmp a x)]  -- "maiores ou iguais"
+    in  smallerSorted ++ [x] ++ biggerSorted
+
+-- RETORNA OS MOVIMENTOS VÁLIDOS DO CAVALO ORDENADOS PELO NÚMERO DE MOVIMENTOS VÁLIDOS A PARTIR DE CADA POSIÇÃO
 validMoves :: (Int, Int) -> Path -> Pos -> [Pos]
 validMoves boardSize path (x, y) =
-    sortOn (\p -> length (nextMoves p)) possibleMoves --ordena os movimentos possíveis com base na quantidade de movimentos válidos que cada um teria na próxima jogada
-    --do menor para o maior
+    quicksortBy (\a b -> movesCount a < movesCount b) possibleMoves
   where
-    --Cria a lista de movimentos válidos a partir da posição atual. Só inclui casas que estão dentro do tabuleiro e ainda não foram visitadas
+    -- Movimentos possíveis a partir da posição atual
     possibleMoves =
         [ (x+dx, y+dy)
-        | (dx,dy) <- moves
+        | (dx, dy) <- moves boardSize
         , isInside boardSize (x+dx, y+dy)
         , (x+dx, y+dy) `notElem` path
         ]
 
-    --Para cada posição de possibleMoves, calcula quantos movimentos válidos ela teria se fossemos para lá. Ou seja, olha uma camada à frente.
-    nextMoves (a, b) =
-        [ (a+dx, b+dy)
-        | (dx,dy) <- moves
-        , isInside boardSize (a+dx, b+dy)
-        , (a+dx, b+dy) `notElem` path
-        ]
+    movesCount :: Pos -> Int -- 
+    movesCount (a, b) =
+        length
+          [ (a+dx, b+dy)
+          | (dx, dy) <- moves boardSize
+          , isInside boardSize (a+dx, b+dy)
+          , (a+dx, b+dy) `notElem` path
+          ]
 
 isOpen :: Pos -> Pos -> (Int, Int) -> Bool
 isOpen (x1, y1) (x2, y2) boardSize =
     -- Verifica se (x2, y2) é um movimento de cavalo válido a partir de (x1, y1) 
-    let nextMoves = [ (x1+dx, y1+dy) | (dx,dy) <- moves, isInside boardSize (x1+dx, y1+dy)]
-    in null [(a,b) | (a, b) <- nextMoves, a == x2, b == y2]
+    let nextMoves = [ (x1+dx, y1+dy) | (dx,dy) <- moves boardSize, isInside boardSize (x1+dx, y1+dy)]
+    in notElem(x2,y2) nextMoves
 
---VISITA TODOS OS CAMINHOS POSSÍVEIS DO CAVALO --RUIM PRA KRL--
--- horseTour :: (Int, Int) -> Path -> Pos -> [Path]
--- horseTour boardSize path currentPos
---     | length path == n * m = [path]
---     | otherwise = concat [ horseTour boardSize (nextPos : path) nextPos | nextPos <- validMoves boardSize path currentPos ]
---     where (n, m) = boardSize
-
--- VISITA APENAS O PRIMEIRO CAMINHO ENCONTRADO
-
---MAYBE
---O tipo maybe serve arpa representar um valor que pode ou não estar presente
--- Just x -> representa que eu achei um valor x
--- Nothing -> representa que eu não achei nenhum valor
 
 -- Não roda para tabuleiros grandes
---horseTour :: (Int, Int) -> Path -> Pos -> Maybe Path
+horseTour :: (Int, Int) -> Path -> Pos -> Maybe Path
 horseTour boardSize path currentPos
     | length path == n*m = 
-        let finalPath = reverse path 
-            firstPos = head finalPath
+        let firstPos = last path
             lastPos = currentPos
         in
-        if isOpen lastPos firstPos boardSize
-            then Just finalPath
-            else Nothing
+        if isOpen firstPos lastPos boardSize
+            then Just (reverse path) -- Retorna o caminho completo se for um passeio fechado
+            else Nothing -- Retorna Nothing se não for um passeio fechado
     | otherwise = tryMoves (validMoves boardSize path currentPos) 
     where 
         (n, m) = boardSize
@@ -78,4 +70,3 @@ horseTour boardSize path currentPos
                 Just p -> Just p -- Se encontramos um caminho válido, retornamos ele
                 Nothing -> tryMoves rest -- Caso contrário, tentamos o próximo moviimento
 
--- Roda para tabuleiros maiores

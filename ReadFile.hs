@@ -6,7 +6,7 @@ readCases fileName = do
     contents <- readFile fileName
     let linhas = lines contents
     let dados = map parseLinha linhas
-    return dados  -- ✅ retorna a lista, sem imprimir
+    return dados  -- retorna a lista, sem imprimir
 
 -- Converte uma linha em lista de inteiros
 parseLinha :: String -> [Int]
